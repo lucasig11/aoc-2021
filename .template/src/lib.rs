@@ -34,11 +34,33 @@ mod tests {
 
     #[test]
     fn test_part_one() {
-        let _result = solve_part_one(&parse_input(INPUT));
+        let result = solve_part_one(&parse_input(INPUT));
+
+        #[cfg(debug_assertions)]
+        assert_eq!(result, 4512);
+
+        #[cfg(not(debug_assertions))]
+        assert_eq!(result, 27027);
+    }
+
+    #[bench]
+    fn bench_part_one(b: &mut test::Bencher) {
+        b.iter(|| solve_part_one(&parse_input(INPUT)));
     }
 
     #[test]
     fn test_part_two() {
-        let _result = solve_part_two(&parse_input(INPUT));
+        let result = solve_part_two(&parse_input(INPUT));
+
+        #[cfg(debug_assertions)]
+        assert_eq!(result, 1924);
+
+        #[cfg(not(debug_assertions))]
+        assert_eq!(result, 36975);
+    }
+
+    #[bench]
+    fn bench_part_two(b: &mut test::Bencher) {
+        b.iter(|| solve_part_two(&parse_input(INPUT)));
     }
 }
