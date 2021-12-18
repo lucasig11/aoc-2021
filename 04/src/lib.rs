@@ -90,8 +90,6 @@ fn solve_part_two((nums, boards): &ParsedInput) -> u32 {
         boards.retain(|board| !board.won());
     }
 
-    print_boards(&boards);
-
     get_board_points(&boards[0]) * last_num
 }
 
@@ -114,34 +112,23 @@ fn parse_input(input: &str) -> ParsedInput {
         .map(|s| s.parse::<u32>().unwrap())
         .collect();
 
-    let boards = lines.fold(vec![], |mut acc, line| {
+    let boards = lines.fold(Boards::new(), |mut boards, line| {
         if line.is_empty() {
-            acc.push(Board::new());
-            return acc;
+            boards.push(Board::new());
+            return boards;
         }
+
         let row = line
             .split_whitespace()
             .map(|s| s.parse::<u32>().unwrap())
-            .collect();
+            .collect::<Vec<_>>();
 
-        acc.last_mut().unwrap().push(row);
-        acc
+        boards.last_mut().unwrap().push(row);
+
+        boards
     });
 
     (nums, boards)
-}
-
-#[allow(dead_code)]
-fn print_boards(boards: &Boards) {
-    for board in boards {
-        for row in &board.rows {
-            for num in row {
-                print!("{:>2} ", num);
-            }
-            println!();
-        }
-        println!();
-    }
 }
 
 #[cfg(test)]
@@ -150,11 +137,23 @@ mod tests {
 
     #[test]
     fn test_part_one() {
-        let _result = solve_part_one(&parse_input(INPUT));
+        let result = solve_part_one(&parse_input(INPUT));
+
+        #[cfg(debug_assertions)]
+        assert_eq!(result, 4512);
+
+        #[cfg(not(debug_assertions))]
+        assert_eq!(result, 27027);
     }
 
     #[test]
     fn test_part_two() {
-        let _result = solve_part_two(&parse_input(INPUT));
+        let result = solve_part_two(&parse_input(INPUT));
+
+        #[cfg(debug_assertions)]
+        assert_eq!(result, 1924);
+
+        #[cfg(not(debug_assertions))]
+        assert_eq!(result, 36975);
     }
 }
