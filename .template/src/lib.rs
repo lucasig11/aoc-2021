@@ -4,20 +4,18 @@ const INPUT: &str = include_str!("../sample.TXT");
 #[cfg(not(debug_assertions))]
 const INPUT: &str = include_str!("../input.TXT");
 
-fn solve_part_one(_input: &[u32]) -> u32 {
+type ParsedInput = u32;
+
+fn solve_part_one(_input: &ParsedInput) -> u32 {
     todo!()
 }
 
-fn solve_part_two(_input: &[u32]) -> u32 {
+fn solve_part_two(_input: &ParsedInput) -> u32 {
     todo!()
 }
 
-fn parse_input(input: &str) -> Vec<u32> {
-    let mut vec = Vec::new();
-    for line in input.lines() {
-        vec.push(line.parse().unwrap());
-    }
-    vec
+fn parse_input(input: &str) -> ParsedInput {
+    todo!()
 }
 
 pub fn solve() {
