@@ -1,3 +1,6 @@
+#![feature(test)]
+extern crate test;
+
 #[cfg(debug_assertions)]
 const INPUT: &str = include_str!("../sample.TXT");
 
