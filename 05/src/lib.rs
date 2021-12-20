@@ -18,12 +18,6 @@ struct Coord {
     pub y: isize,
 }
 
-impl Coord {
-    pub fn new(x: isize, y: isize) -> Self {
-        Coord { x, y }
-    }
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 struct Line {
     pub start: Coord,
@@ -36,72 +30,27 @@ struct Diagram {
     visited_twice_cnt: usize,
 }
 
-impl Diagram {
-    pub fn new(max_coord: &Coord) -> Self {
-        Diagram {
-            lines: vec![vec![0; max_coord.x as usize + 1]; max_coord.y as usize + 1],
-            visited_twice_cnt: 0,
-        }
-    }
-
-    fn range_from(p1: isize, p2: isize) -> RangeInclusive<usize> {
-        let min = p1.min(p2);
-        let max = p1.max(p2);
-
-        min as usize..=max as usize
-    }
-
-    pub fn visit(&mut self, line: &Line) {
-        let y_range = Self::range_from(line.start.y, line.end.y);
-        let x_range = Self::range_from(line.start.x, line.end.x);
-
-        if line.is_diagonal() {
-            // Diagonal line
-        }
-
-        self.lines[y_range].iter_mut().for_each(|row| {
-            for x in row[x_range.clone()].iter_mut() {
-                *x += 1;
-
-                if *x == 2 {
-                    self.visited_twice_cnt += 1;
-                }
-            }
-        });
-    }
-
-    pub fn count_visited_twice(&self) -> usize {
-        self.visited_twice_cnt
-    }
-}
-
-impl Line {
-    pub fn is_horizontal(&self) -> bool {
-        self.start.x == self.end.x || self.start.y == self.end.y
-    }
-
-    pub fn is_diagonal(&self) -> bool {
-        // Not mathematically correct but works for this case
-        self.start.x != self.end.x && self.start.y != self.end.y
-    }
-
-    pub fn displacement(&self) -> Coord {
-        Coord {
-            x: self.end.x - self.start.x,
-            y: self.end.y - self.start.y,
-        }
-    }
-}
-
 impl Display for Coord {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "({}, {})", self.x, self.y,)
     }
 }
 
+impl Display for Line {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{} -> {}", self.start, self.end)
+    }
+}
+
 impl Display for Diagram {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        for row in &self.lines {
+        write!(f, "  ")?;
+        for x in 0..self.lines[0].len() {
+            write!(f, "{:2} ", x)?;
+        }
+        writeln!(f)?;
+        for (idx, row) in self.lines.iter().enumerate() {
+            write!(f, "{} ", idx)?;
             for &cell in row {
                 if cell == 0 {
                     write!(f, " . ")?;
@@ -116,16 +65,100 @@ impl Display for Diagram {
     }
 }
 
-impl Display for Line {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{} -> {}", self.start, self.end)
+impl Coord {
+    pub fn new(x: isize, y: isize) -> Self {
+        Coord { x, y }
+    }
+}
+
+impl Line {
+    pub fn is_straight(&self) -> bool {
+        self.start.x == self.end.x || self.start.y == self.end.y
+    }
+
+    // Creates an inclusive range from two positions
+    fn range_from(p1: isize, p2: isize) -> RangeInclusive<usize> {
+        let min = p1.min(p2);
+        let max = p1.max(p2);
+
+        min as usize..=max as usize
+    }
+
+    pub fn as_ranges(&self) -> (RangeInclusive<usize>, RangeInclusive<usize>) {
+        let x_range = Self::range_from(self.start.x, self.end.x);
+        let y_range = Self::range_from(self.start.y, self.end.y);
+
+        (x_range, y_range)
+    }
+
+    pub fn displacement(&self) -> Coord {
+        Coord {
+            x: self.end.x - self.start.x,
+            y: self.end.y - self.start.y,
+        }
+    }
+}
+
+impl Diagram {
+    pub fn new(max_coord: &Coord) -> Self {
+        Diagram {
+            lines: vec![vec![0; max_coord.x as usize + 1]; max_coord.y as usize + 1],
+            visited_twice_cnt: 0,
+        }
+    }
+
+    pub fn visit(&mut self, line: &Line) {
+        let (x_range, y_range) = line.as_ranges();
+
+        if !line.is_straight() {
+            return self.visit_angled(line);
+        }
+
+        self.lines[y_range].iter_mut().for_each(|row| {
+            for x in row[x_range.clone()].iter_mut() {
+                *x += 1;
+
+                if *x == 2 {
+                    self.visited_twice_cnt += 1;
+                }
+            }
+        });
+    }
+
+    fn visit_point(&mut self, x: usize, y: usize) {
+        self.lines[y][x] += 1;
+
+        if self.lines[y][x] == 2 {
+            self.visited_twice_cnt += 1;
+        }
+    }
+
+    pub fn visit_angled(&mut self, line: &Line) {
+        let (mut x_range, y_range) = line.as_ranges();
+        let Coord { x: dx, y: dy } = line.displacement();
+
+        if dx < 0 && dy > 0 || dx > 0 && dy < 0 {
+            let mut x_range = x_range.rev();
+            for i in y_range {
+                self.visit_point(x_range.next().unwrap(), i);
+            }
+            return;
+        }
+
+        for i in y_range {
+            self.visit_point(x_range.next().unwrap(), i);
+        }
+    }
+
+    pub fn count_visited_twice(&self) -> usize {
+        self.visited_twice_cnt
     }
 }
 
 fn solve_part_one((lines, max_coord): &ParsedInput) -> usize {
     let mut diagram = Diagram::new(max_coord);
 
-    let lines = lines.iter().filter(|l| l.is_horizontal());
+    let lines = lines.iter().filter(|l| l.is_straight());
 
     for line in lines {
         diagram.visit(line);
@@ -181,9 +214,6 @@ fn parse_input(input: &str) -> ParsedInput {
     (res, max_coord)
 }
 
-#[allow(unused)]
-fn dump_diagram(diagram: &[Vec<u32>]) {}
-
 pub fn solve() {
     let input = parse_input(INPUT);
 
@@ -219,10 +249,10 @@ mod tests {
         let result = solve_part_two(&parse_input(INPUT));
 
         #[cfg(debug_assertions)]
-        assert_eq!(result, 1924);
+        assert_eq!(result, 12);
 
         #[cfg(not(debug_assertions))]
-        assert_eq!(result, 36975);
+        assert_eq!(result, 18627);
     }
 
     #[bench]
