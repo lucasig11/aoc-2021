@@ -4,4 +4,4 @@ day=$1
 
 mkdir -p $day
 cp -r ./.template/* $day
-
+cd $1
