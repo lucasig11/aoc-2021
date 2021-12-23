@@ -48,7 +48,8 @@ mod tests {
 
     #[bench]
     fn bench_part_one(b: &mut test::Bencher) {
-        b.iter(|| solve_part_one(&parse_input(INPUT)));
+        let input = parse_input(INPUT);
+        b.iter(|| solve_part_one(&input));
     }
 
     #[test]
@@ -64,6 +65,7 @@ mod tests {
 
     #[bench]
     fn bench_part_two(b: &mut test::Bencher) {
-        b.iter(|| solve_part_two(&parse_input(INPUT)));
+        let input = parse_input(INPUT);
+        b.iter(|| solve_part_two(&input));
     }
 }
