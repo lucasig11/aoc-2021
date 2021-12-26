@@ -7,13 +7,13 @@ const INPUT: &str = include_str!("../sample.TXT");
 #[cfg(not(debug_assertions))]
 const INPUT: &str = include_str!("../input.TXT");
 
-type ParsedInput = u32;
+type ParsedInput = usize;
 
-fn solve_part_one(_input: &ParsedInput) -> u32 {
+fn solve_part_one(_input: &ParsedInput) -> usize {
     todo!()
 }
 
-fn solve_part_two(_input: &ParsedInput) -> u32 {
+fn solve_part_two(_input: &ParsedInput) -> usize {
     todo!()
 }
 
