@@ -1,12 +1,12 @@
 #[derive(Copy, Clone, Debug)]
-pub struct BitStream {
-    pub data: &'a [u8],
-    pub current_byte: usize,
-    pub current_bit: u8,
-    pub byte_len: u8,
+pub struct BitStream<'a> {
+    data: &'a [u8],
+    current_byte: usize,
+    current_bit: u8,
+    byte_len: u8,
 }
 
-impl BitStream {
+impl<'a> BitStream<'a> {
     pub fn new(data: &'a [u8], byte_len: u8) -> BitStream {
         BitStream {
             data,
@@ -14,33 +14,41 @@ impl BitStream {
             current_bit: 0,
             byte_len,
         }
-}
+    }
 
-impl Iterator for BitStream {
-    type Item = bool;
-
-    fn next(&mut self) -> Option<bool> {
-        if self.current_bit == 0 {
-            self.current_bit = 8;
-            self.current_byte += 1;
+    pub fn advance_by(&mut self, n: u8) -> Option<u64> {
+        let mut result = 0;
+        for _ in 0..n {
+            result <<= 1;
+            result |= self.advance()? as u64;
         }
+        Some(result)
+    }
 
-        if self.current_byte == self.byte_len {
+    pub fn advance(&mut self) -> Option<u8> {
+        if self.current_byte >= self.data.len() {
             return None;
         }
-
-        let bit = (self.data[self.current_byte] & (1 << (self.current_bit - 1))) != 0;
-        self.current_bit -= 1;
-
+        let byte = self.data[self.current_byte];
+        let bit = (byte >> ((self.byte_len - 1) - self.current_bit)) & 1;
+        self.current_bit += 1;
+        if self.current_bit == self.byte_len {
+            self.current_bit = 0;
+            self.current_byte += 1;
+        }
         Some(bit)
+    }
+
+    pub fn bits_read(&self) -> u64 {
+        (self.current_byte as u64) * (self.byte_len as u64) + (self.current_bit as u64)
     }
 }
 
-impl std::ops::Index<usize> for BitStream {
-    type Output = bool;
-
-    fn index(&self, index: usize) -> &bool {
-        let bit = (self.data[index / 8] & (1 << (index % 8))) != 0;
-        &bit
+impl std::fmt::Binary for BitStream<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for i in self.current_byte..self.data.len() {
+            write!(f, "{:0d$b} ", self.data[i], d = self.byte_len as usize)?;
+        }
+        writeln!(f)
     }
 }
