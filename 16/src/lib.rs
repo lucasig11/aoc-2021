@@ -140,14 +140,45 @@ impl Packet {
     }
 }
 
+fn op_to_str(op: u8) -> &'static str {
+    match op {
+        0 => "+",
+        1 => "*",
+        2 => "min",
+        3 => "max",
+        5 => ">",
+        6 => "<",
+        7 => "==",
+        _ => panic!("invalid operator"),
+    }
+}
+
+impl std::fmt::Display for Packet {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            Packet::Literal(p) => write!(f, "{}", p.literal),
+            Packet::Operator(p) => {
+                let op = p.operator;
+                let sub_packets = p.sub_packets.iter().map(|p| p.to_string());
+
+                write!(f, "({}", op_to_str(op))?;
+                for sp in sub_packets {
+                    write!(f, " {}", sp)?;
+                }
+                write!(f, ")")
+            }
+        }
+    }
+}
+
 fn solve_part_one(input: &ParsedInput) -> u64 {
     let mut stream = BitStream::new(input, 4);
     let packet = Packet::parse(&mut stream).unwrap();
     packet.version_sum()
 }
 
-fn solve_part_two(_input: &ParsedInput) -> u64 {
-    let mut stream = BitStream::new(_input, 4);
+fn solve_part_two(input: &ParsedInput) -> u64 {
+    let mut stream = BitStream::new(input, 4);
     let packet = Packet::parse(&mut stream).unwrap();
     packet.execute()
 }
